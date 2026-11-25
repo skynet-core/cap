@@ -20,11 +20,27 @@ locations. An explicit `--manifest-path` naming `amp.toml` is invalid.
 Keep old private and build paths ignored to prevent accidental staging.
 Manifest fields and numeric format versions do not change.
 
+Keep canonical workspace and member path validation, tool probing, action
+order and compilation-database format unchanged. For default build roots,
+only the private `.amp/build` spelling changes to `.cap/build`. Keep the
+existing fresh per-invocation output directory and module mapper behavior;
+never read or reuse old build or module state. Compare each new raw
+compilation database with the compiler calls made by the new executable,
+not with old path strings. This rename adds no cache path or cache behavior.
+
 The Debian and Fedora package is `cap-cli` and installs `/usr/bin/cap`.
 The tar archive contains `bin/cap` relative to its extraction prefix.
 Update the root README, package metadata, workflows, fixture manifests,
 schemas, and owned code together. CI may produce candidate packages; owner
 review and green checks do not authorize publication of a release.
+
+The verification pins are GCC 16.2.0, Clang/clang-format 23.1.6, and
+Boost 1.92.0 at `afdfa32505af73e3d208144b3f623f0096cb62b6`. The first
+packages target Linux x86-64 / glibc 2.41 or newer. The standalone
+executable uses the system loader and libc/libm; Boost and the GCC
+runtime are linked statically. Do not change toolchain ABI settings,
+compiler flags, supported targets, or user-project linkage as part of
+the naming change.
 
 ## Migration
 
