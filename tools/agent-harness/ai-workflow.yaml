@@ -1,0 +1,55 @@
+project:
+  name: ai-workflow
+  max_parallel_workers: 8
+  max_terra_workers: 3
+  max_luna_workers: 5
+  max_revision_rounds_per_task: 3
+roles:
+  sol:
+    model: "openai/GPT-6.2 Sol"
+    permissions: [research, plan, revise_tasks, review_milestones]
+    receives_user_prompts: true
+  terra:
+    model: "openai/GPT-6.1 Terra"
+    permissions: [implement, integrate, request_review]
+    receives_user_prompts: false
+  luna:
+    model: "openai/GPT-6 Luna"
+    permissions: [implement, test, document]
+    receives_user_prompts: false
+  qwen:
+    model: "vllm/nvidia/Qwen3.8-27B-NVFP4"
+    permissions: [implement, test]
+    receives_user_prompts: false
+    fallback_only: true
+  astra:
+    model: "openai/GPT-6.2 Astra"
+    permissions: [final_audit]
+    receives_user_prompts: false
+policies:
+  authoring_fallback:
+    role: qwen
+    requires_provider_usage_limit_for_both: [terra, luna]
+  frozen_user_request: true
+  independent_review: true
+  prohibit_worker_changes_to_acceptance: true
+  require_all_checks_green: true
+  source_delivery:
+    remote: origin
+    require_topic_commit_and_push: true
+    required_ci_check: Linux build and test
+  static_checks:
+    required_before_review: true
+    cpp:
+      - [/opt/clice/bin/clice, serve]
+      - [/opt/clice/bin/clice, lint]
+      - [/home/linuxbrew/.linuxbrew/bin/clang-format, --dry-run, --Werror]
+    shell:
+      - [/home/linuxbrew/.linuxbrew/bin/shellcheck]
+      - [/home/linuxbrew/.linuxbrew/bin/shfmt, -d]
+    python:
+      - [/home/linuxbrew/.linuxbrew/bin/ruff, check]
+      - [/home/linuxbrew/.linuxbrew/bin/ruff, format, --check]
+      - [/home/linuxbrew/.linuxbrew/bin/isort, --check-only]
+      - [/home/linuxbrew/.linuxbrew/bin/pyrefly, check, --min-severity, warn]
+  require_human_approval_for_production: true

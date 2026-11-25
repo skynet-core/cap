@@ -1,0 +1,3 @@
+# AMP engineering spec v1.5 — local agent workflows
+
+Based on v1.4; retains all existing twenty subsystem specifications and bootstrap policy. Adds normative local agent operations, harness compatibility notes, sample OpenCode and Codex configurations, vLLM serving script, and the previously delivered experimental benchmark harness. Updates root AGENTS, README, roadmap and agent coordination/workflow references. No AMP production implementation or tested end-to-end agent orchestration is claimed. See `docs/LOCAL-AGENT-OPERATIONS.md` for state machine, risk policy, evidence and throughput definitions.

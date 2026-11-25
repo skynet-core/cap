@@ -1,0 +1,8 @@
+manifest-version = 1
+[package]
+name = "amp-lock"
+version = "0.1.0"
+publish = false
+[language]
+cpp = "c++26"
+# Implementation targets intentionally not invented until contract/API design is complete.

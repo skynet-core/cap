@@ -1,0 +1,15 @@
+manifest-version = 1
+
+[package]
+name = "native-standalone"
+version = "0.1.0"
+publish = false
+
+[language]
+c = "c23"
+cpp = "c++26"
+
+[[bin]]
+name = "standalone"
+entry = "src space/main.cpp"
+sources = ["src space/main.cpp", "src space/value.cppm", "src space/c_value.c"]

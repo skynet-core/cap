@@ -1,0 +1,9 @@
+plugin-version = 1
+[plugin]
+name = "amp-hello"
+version = "0.1.0"
+[compatibility]
+api = "1"
+[command]
+name = "hello"
+entry = "bin/amp-hello"

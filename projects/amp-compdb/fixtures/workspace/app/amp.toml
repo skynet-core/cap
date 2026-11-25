@@ -1,0 +1,25 @@
+manifest-version = 1
+
+[package]
+name = "fixture-app"
+version = "0.1.0"
+license = "MIT"
+publish = false
+
+[language]
+cpp = "c++26"
+
+[dependencies]
+fixture-lib = { path = "../lib" }
+
+[[bin]]
+name = "first"
+entry = "src space/first.cpp"
+sources = ["src space/first.cpp", "src space/platform_linux.cpp", "src space/platform_windows.cpp", "src space/platform_test.cpp"]
+depends-on = ["fixture-lib"]
+
+[[bin]]
+name = "second"
+entry = "src space/second.cpp"
+sources = ["src space/second.cpp"]
+depends-on = ["fixture-lib"]

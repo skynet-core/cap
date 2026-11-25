@@ -1,0 +1,6 @@
+manifest-version = 1
+
+[workspace]
+members = ["lib", "app"]
+default-members = ["app"]
+resolver = "1"

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "enabled_providers": [
+    "vllm"
+  ],
+  "provider": {
+    "vllm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Qwen3.8",
+      "options": {
+        "baseURL": "http://10.20.0.1:11535/v1",
+        "apiKey": "dummy"
+      },
+      "models": {
+        "nvidia/Qwen3.8-27B-NVFP4": {
+          "name": "Qwen3.8",
+          "limit": {
+            "context": 32768,
+            "output": 4096
+          }
+        }
+      }
+    }
+  },
+  "model": "vllm/nvidia/Qwen3.8-27B-NVFP4",
+  "agent": {
+    "amp-implement": {
+      "description": "Implement only the claimed AMP task and required tests; honor allowed paths and frozen contracts.",
+      "model": "vllm/nvidia/Qwen3.8-27B-NVFP4",
+      "prompt": "Read AGENTS.md, docs/LOCAL-AGENT-OPERATIONS.md, and task-specific contracts. Make minimal C++26 changes with *_test.cpp. Never change public contracts without approval. Record commands and evidence; do not claim unrun checks passed."
+    },
+    "amp-review": {
+      "description": "Read-only contract, correctness and security review; no edits.",
+      "model": "vllm/nvidia/Qwen3.8-27B-NVFP4",
+      "prompt": "Review the proposed patch against frozen contracts, tests, security and ownership. Report findings and unrun checks; do not modify files.",
+      "tools": {
+        "write": false,
+        "edit": false
+      }
+    }
+  }
+}

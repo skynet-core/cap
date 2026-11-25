@@ -1,0 +1,7 @@
+[
+  {"directory":"@BUILD@","file":"@ROOT@/lib/src/fixture.cpp","arguments":["/home/linuxbrew/.linuxbrew/bin/g++-16","-std=c++26","-fmodules","-x","c++","-c","@ROOT@/lib/src/fixture.cpp","-o","@BUILD@/fixture.o"],"output":"@BUILD@/fixture.o"},
+  {"directory":"@BUILD@","file":"@ROOT@/app/src space/first.cpp","arguments":["/home/linuxbrew/.linuxbrew/bin/g++-16","-std=c++26","-fmodules","-c","@ROOT@/app/src space/first.cpp","-o","@BUILD@/first.o"],"output":"@BUILD@/first.o"},
+  {"directory":"@BUILD@","file":"@ROOT@/app/src space/platform_linux.cpp","arguments":["/home/linuxbrew/.linuxbrew/bin/g++-16","-std=c++26","-fmodules","-c","@ROOT@/app/src space/platform_linux.cpp","-o","@BUILD@/platform.o"],"output":"@BUILD@/platform.o"},
+  {"directory":"@BUILD@","file":"@ROOT@/app/src space/second.cpp","arguments":["/home/linuxbrew/.linuxbrew/bin/g++-16","-std=c++26","-fmodules","-c","@ROOT@/app/src space/second.cpp","-o","@BUILD@/second.o"],"output":"@BUILD@/second.o"},
+  {"directory":"@BUILD@","file":"@ROOT@/app/src space/platform_test.cpp","arguments":["/home/linuxbrew/.linuxbrew/bin/g++-16","-std=c++26","-fmodules","-c","@ROOT@/app/src space/platform_test.cpp","-o","@BUILD@/test.o"],"output":"@BUILD@/test.o"}
+]

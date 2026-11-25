@@ -1,0 +1,3 @@
+[overrides]
+fmt = { path = "../fmt" }
+network = { git = "ssh://git.example.com/network.git", rev = "FULL_COMMIT" }

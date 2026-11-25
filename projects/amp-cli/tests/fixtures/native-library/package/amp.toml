@@ -1,0 +1,17 @@
+manifest-version = 1
+
+[package]
+name = "native-library"
+version = "0.1.0"
+publish = false
+
+[language]
+c = "c23"
+cpp = "c++26"
+
+[lib]
+name = "native_library"
+type = "static"
+sources = ["src/c_value.c", "src/value.cppm", "src/library.cpp"]
+headers = ["public include/library.h"]
+public-include-dirs = ["public include"]

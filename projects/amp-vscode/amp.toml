@@ -1,0 +1,2 @@
+# amp-vscode is a TypeScript extension, not an amp C++ package.
+# Its package.json will be authored in the implementation phase.

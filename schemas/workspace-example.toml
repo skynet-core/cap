@@ -1,0 +1,10 @@
+manifest-version = 1
+[workspace]
+members = ["libs/*", "apps/*"]
+default-members = ["apps/server"]
+resolver = "2"
+[workspace.dependencies]
+fmt = "11.0"
+[workspace.toolchain]
+channel = "llvm"
+version = "PINNED_COMPATIBLE_VERSION"

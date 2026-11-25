@@ -1,0 +1,13 @@
+manifest-version = 1
+[package]
+name = "server"
+version = "0.1.0"
+[language]
+cpp = "c++26"
+[[bin]]
+name = "server"
+entry = "applications/server_main.cpp"
+sources = ["source/**/*.cpp"]
+include-dirs = ["include"]
+[dependencies]
+fmt = { workspace = true }
