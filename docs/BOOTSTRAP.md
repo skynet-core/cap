@@ -65,3 +65,20 @@ targets can import C++ named modules provided by their local static-library
 dependencies. The build uses target-private module files and exports the
 actual compiler commands, including module mapper options, in the invocation's
 compilation database. Cross-toolchain reuse and header units are unsupported.
+
+## GitHub Actions Boost cache
+
+Build and package CI share an exact-key cache for the pinned Boost install,
+its inventory record, and the Boost license. The key binds the runner OS and
+architecture, the full Boost revision, and the workflow and bootstrap recipes
+that select the build container and flags. There are no fallback keys.
+
+On a miss, CI builds Boost from source. On a hit, it verifies the installed
+pin and whole recorded header/library inventory before compiling CAP. In both
+cases CI separately checks the license digest. An invalid cache fails the job;
+remove the bad entry and rerun rather than using its bytes. Only branch pushes
+save caches; GitHub's branch and tag cache visibility rules still apply.
+
+This cache does not store CAP binaries, compiler modules, or local settings.
+It is a CI optimization, not a replacement for trusted build inputs or release
+approval.

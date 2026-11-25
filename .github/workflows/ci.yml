@@ -22,6 +22,10 @@ jobs:
       CAP_CXX: /usr/local/bin/g++
       BOOST_VERSION: '1.92.0'
       BOOST_COMMIT: afdfa32505af73e3d208144b3f623f0096cb62b6
+      BOOST_CACHE_PATHS: |
+        .bootstrap/boost-install
+        .bootstrap/boost-install.record
+        .bootstrap/boost-license.txt
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -32,14 +36,49 @@ jobs:
           core_build=$(mktemp -d /tmp/cap-core.XXXXXXXX)
           chown 65534:65534 "$core_build"
           TMPDIR="$core_build" setpriv --reuid=65534 --regid=65534 \
-            --clear-groups --no-new-privs \
+             --clear-groups --no-new-privs \
             make CC="$CAP_CC" CXX="$CAP_CXX" BOOTSTRAP_ROOT="$core_build" core-test
-      - name: Bootstrap and module probe
+      - name: Use the host runner's cache compression format
+        run: |
+          if ! command -v zstd >/dev/null; then
+            apt-get -qq update
+            apt-get -yqq --no-install-recommends install zstd
+          fi
+      - name: Restore verified Boost install
+        id: boost-cache
+        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: ${{ env.BOOST_CACHE_PATHS }}
+          key: cap-boost-sdk-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.BOOST_VERSION }}-${{ env.BOOST_COMMIT }}-${{ hashFiles('Makefile', 'bootstrap/boost-install.sh', '.github/workflows/ci.yml', '.github/workflows/release.yml') }}
+      - name: Prepare pinned Boost install
+        env:
+          BOOST_CACHE_HIT: ${{ steps.boost-cache.outputs.cache-hit }}
         run: |
           test "$("$CAP_CXX" -dumpfullversion)" = 16.2.0
-          make CC="$CAP_CC" CXX="$CAP_CXX" \
+          if [[ $BOOST_CACHE_HIT == true ]]; then
+            printf '%s\n' 'Boost SDK cache hit; verifying without rebuilding.'
+          else
+            make CC="$CAP_CC" CXX="$CAP_CXX" \
+              BOOST_VERSION="$BOOST_VERSION" BOOST_COMMIT="$BOOST_COMMIT" \
+              BOOST_JOBS=2 boost-build
+            cp .bootstrap/boost-src/LICENSE_1_0.txt .bootstrap/boost-license.txt
+          fi
+          sh bootstrap/boost-install.sh verify .bootstrap .bootstrap/boost-install \
+            "$BOOST_VERSION" "$BOOST_COMMIT"
+          sha256sum --check --strict <<'SUMS'
+          c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566  .bootstrap/boost-license.txt
+          SUMS
+      - name: Save verified Boost install
+        if: github.event_name == 'push' && github.ref_type == 'branch' && steps.boost-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: ${{ env.BOOST_CACHE_PATHS }}
+          key: ${{ steps.boost-cache.outputs.cache-primary-key }}
+      - name: Bootstrap and module probe
+        run: |
+          make -o boost-build CC="$CAP_CC" CXX="$CAP_CXX" \
             BOOST_VERSION="$BOOST_VERSION" BOOST_COMMIT="$BOOST_COMMIT" \
-            BOOST_JOBS=2 bootstrap-probes bootstrap
+            bootstrap-probes bootstrap
       - name: Build development CLI
         run: |
           make CC="$CAP_CC" CXX="$CAP_CXX" \
