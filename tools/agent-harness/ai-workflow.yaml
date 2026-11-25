@@ -37,6 +37,11 @@ policies:
   source_delivery:
     remote: origin
     require_topic_commit_and_push: true
+    task_pr_base: "milestone/<name>"
+    task_pr_merge: rebase_after_checks
+    milestone_pr_base: develop
+    milestone_pr_merge: human_review_and_merge
+    develop_merge_channel: prerelease
     required_ci_check: Linux build and test
   static_checks:
     required_before_review: true

@@ -1,0 +1,111 @@
+name: Develop prerelease
+
+on:
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    uses: ./.github/workflows/ci.yml
+
+  milestone:
+    name: Identify merged milestone PR
+    if: ${{ !github.event.forced && !github.event.deleted }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      pr: ${{ steps.merge.outputs.pr }}
+      version: ${{ steps.merge.outputs.version }}
+    steps:
+      - id: merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          matches=$(gh api --paginate "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls?per_page=100" |
+            jq -sc --arg sha "$GITHUB_SHA" --arg repo "$GITHUB_REPOSITORY" '
+              [.[][] | select(.merged_at != null and .merge_commit_sha == $sha
+                and .base.ref == "develop" and .base.repo.full_name == $repo
+                and .head.repo.full_name == $repo and (.head.ref | startswith("milestone/")))]')
+          case "$(jq length <<< "$matches")" in
+            0) printf '%s\n' 'No merged milestone PR for this commit; no prerelease.'; exit 0 ;;
+            1) pr=$(jq -r '.[0].number' <<< "$matches") ;;
+            *) printf '%s\n' 'Ambiguous milestone merge; refusing to publish.' >&2; exit 1 ;;
+          esac
+          [[ $pr =~ ^[1-9][0-9]*$ ]]
+          printf 'pr=%s\nversion=0.0.%s\n' "$pr" "$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+
+  packages:
+    needs: milestone
+    if: needs.milestone.outputs.pr != ''
+    uses: ./.github/workflows/release.yml
+    with:
+      version: ${{ needs.milestone.outputs.version }}
+
+  publish:
+    name: Publish prerelease for manual verification
+    needs: [native, milestone, packages]
+    if: needs.milestone.outputs.pr != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cap-linux-x86_64-${{ needs.milestone.outputs.version }}
+          path: ${{ runner.temp }}/cap-prerelease
+      - name: Verify assets and publish
+        working-directory: ${{ runner.temp }}/cap-prerelease
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.milestone.outputs.version }}
+          PR_NUMBER: ${{ needs.milestone.outputs.pr }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          [[ $VERSION =~ ^0\.0\.[1-9][0-9]*$ && $PR_NUMBER =~ ^[1-9][0-9]*$ ]]
+          deb=cap-cli_${VERSION}_amd64.deb
+          rpm=cap-cli-${VERSION}-1.x86_64.rpm
+          archive=cap-cli-${VERSION}-linux-x86_64.tar.gz
+          diff -u <(printf '%s\n' "$deb" "$rpm" "$archive" | sort) \
+            <(awk '{print $2}' SHA256SUMS | sort)
+          sha256sum --check --strict SHA256SUMS
+
+          tag=develop-$GITHUB_SHA
+          pr=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER")
+          jq -e --arg sha "$GITHUB_SHA" '.merged_at != null and .merge_commit_sha == $sha' <<< "$pr" >/dev/null
+          body=$(jq -r '.body // ""' <<< "$pr")
+          grep -Fqx '## Changelog' <<< "$body"
+          grep -Fqx '## Manual verification' <<< "$body"
+          {
+            printf '# CAP %s prerelease\n\n' "$VERSION"
+            printf 'Commit: %s\n\n' "$GITHUB_SHA"
+            printf 'Milestone PR: [%s](%s)\n\n' "$(jq -r .title <<< "$pr")" "$(jq -r .html_url <<< "$pr")"
+            printf '%s\n' "$body"
+            printf '\n[Changes since the previous develop tip](%s/%s/compare/%s...%s)\n' \
+              "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$BEFORE_SHA" "$GITHUB_SHA"
+          } > CHANGELOG.md
+          sha256sum CHANGELOG.md >> SHA256SUMS
+
+          # --target is ignored for existing tags, so bind and verify the tag ourselves.
+          if ! ref=$(gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/tags/$tag" -f sha="$GITHUB_SHA"); then
+            ref=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag")
+          fi
+          jq -e --arg sha "$GITHUB_SHA" '.object.type == "commit" and .object.sha == $sha' <<< "$ref" >/dev/null
+          if release=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease,assets,url 2>/dev/null); then
+            jq -er --arg deb "$deb" --arg rpm "$rpm" --arg archive "$archive" '
+              select(.isPrerelease and (.isDraft | not) and
+                (([.assets[].name] | sort) == ([$deb,$rpm,$archive,"SHA256SUMS","CHANGELOG.md"] | sort))) | .url
+            ' <<< "$release"
+            exit 0
+          fi
+          gh release create "$tag" "$deb" "$rpm" "$archive" SHA256SUMS CHANGELOG.md \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --prerelease --latest=false \
+            --title "CAP $VERSION (develop prerelease)" --notes-file CHANGELOG.md
