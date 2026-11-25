@@ -18,8 +18,8 @@ jobs:
       run:
         shell: bash
     env:
-      AMP_CC: /usr/local/bin/gcc
-      AMP_CXX: /usr/local/bin/g++
+      CAP_CC: /usr/local/bin/gcc
+      CAP_CXX: /usr/local/bin/g++
       BOOST_VERSION: '1.92.0'
       BOOST_COMMIT: afdfa32505af73e3d208144b3f623f0096cb62b6
     steps:
@@ -29,36 +29,36 @@ jobs:
       - name: Core tests
         run: |
           # Root bypasses both permission-denial and fork-limit tests.
-          core_build=$(mktemp -d /tmp/amp-core.XXXXXXXX)
+          core_build=$(mktemp -d /tmp/cap-core.XXXXXXXX)
           chown 65534:65534 "$core_build"
           TMPDIR="$core_build" setpriv --reuid=65534 --regid=65534 \
             --clear-groups --no-new-privs \
-            make CC="$AMP_CC" CXX="$AMP_CXX" BOOTSTRAP_ROOT="$core_build" core-test
+            make CC="$CAP_CC" CXX="$CAP_CXX" BOOTSTRAP_ROOT="$core_build" core-test
       - name: Bootstrap and module probe
         run: |
-          test "$("$AMP_CXX" -dumpfullversion)" = 16.2.0
-          make CC="$AMP_CC" CXX="$AMP_CXX" \
+          test "$("$CAP_CXX" -dumpfullversion)" = 16.2.0
+          make CC="$CAP_CC" CXX="$CAP_CXX" \
             BOOST_VERSION="$BOOST_VERSION" BOOST_COMMIT="$BOOST_COMMIT" \
             BOOST_JOBS=2 bootstrap-probes bootstrap
       - name: Build development CLI
         run: |
-          make CC="$AMP_CC" CXX="$AMP_CXX" \
+          make CC="$CAP_CC" CXX="$CAP_CXX" \
             BOOST_VERSION="$BOOST_VERSION" BOOST_COMMIT="$BOOST_COMMIT" \
-            bootstrap-dev | tee "$RUNNER_TEMP/amp-bootstrap-dev.log"
-          amp=$(sed -n 's/^development amp: //p' "$RUNNER_TEMP/amp-bootstrap-dev.log")
-          test -x "$amp"
-          printf 'AMP=%s\n' "$amp" >> "$GITHUB_ENV"
+            bootstrap-dev | tee "$RUNNER_TEMP/cap-bootstrap-dev.log"
+          cap=$(sed -n 's/^development cap: //p' "$RUNNER_TEMP/cap-bootstrap-dev.log")
+          test -x "$cap"
+          printf 'CAP=%s\n' "$cap" >> "$GITHUB_ENV"
       - name: Exercise standalone, multi-binary, static library and workspace builds
         run: |
-          fixtures="$PWD/projects/amp-cli/tests/fixtures"
-          workspace="$PWD/projects/amp-compdb/fixtures/workspace/amp.toml"
-          build=$(mktemp -d "$RUNNER_TEMP/amp-ci.XXXXXXXX")
+          fixtures="$PWD/projects/cap-cli/tests/fixtures"
+          workspace="$PWD/projects/cap-compdb/fixtures/workspace/cap.toml"
+          build=$(mktemp -d "$RUNNER_TEMP/cap-ci.XXXXXXXX")
 
           run_build() {
             local name=$1 manifest=$2 output compdb
             shift 2
             mkdir "$build/$name"
-            output=$("$AMP" build --cc "$AMP_CC" --cxx "$AMP_CXX" --ar /usr/bin/ar \
+            output=$("$CAP" build --cc "$CAP_CC" --cxx "$CAP_CXX" --ar /usr/bin/ar \
               --manifest-path "$manifest" --build-root "$build/$name" "$@")
             printf '%s\n' "$output"
             compdb=$(sed -n 's/^compdb: //p' <<< "$output")
@@ -72,19 +72,19 @@ jobs:
             test "$actual" = "$2"
           }
 
-          run_build standalone "$fixtures/native-standalone/amp.toml"
+          run_build standalone "$fixtures/native-standalone/cap.toml"
           test "${#artifacts[@]}" -eq 1
           expect_output "${artifacts[0]}" 'standalone: 42'
 
-          run_build multibin "$fixtures/native-multibin/amp.toml"
+          run_build multibin "$fixtures/native-multibin/cap.toml"
           test "${#artifacts[@]}" -eq 2
           expect_output "${artifacts[0]}" 'first: 1'
           expect_output "${artifacts[1]}" 'second: 42'
 
           lib="$fixtures/native-library"
-          run_build library "$lib/package/amp.toml" --lib
+          run_build library "$lib/package/cap.toml" --lib
           test "${#artifacts[@]}" -eq 1
-          "$AMP_CXX" -std=c++26 -I "$lib/package/public include" \
+          "$CAP_CXX" -std=c++26 -I "$lib/package/public include" \
             "$lib/consumer/main.cpp" "${artifacts[0]}" -o "$build/consumer"
           expect_output "$build/consumer" 'library: 42'
 
@@ -97,5 +97,17 @@ jobs:
           run_build selected "$workspace" --package fixture-app --bin second
           test "${#artifacts[@]}" -eq 1
           expect_output "${artifacts[0]}" 'second: 42'
+      - name: Reject the legacy manifest name
+        run: |
+          old=$(mktemp -d "$RUNNER_TEMP/cap-legacy.XXXXXXXX")
+          cp projects/cap-cli/tests/fixtures/native-standalone/cap.toml "$old/amp.toml"
+          if "$CAP" build --cc /missing/gcc --cxx /missing/g++ --ar /missing/ar \
+            --manifest-path "$old/amp.toml" --build-root "$old/build" \
+            >"$old/stdout" 2>"$old/stderr"; then
+            exit 1
+          fi
+          grep -F 'manifest must be an existing cap.toml' "$old/stderr"
+          test ! -s "$old/stdout"
+          test ! -e "$old/build"
       - name: Check that build outputs leave the working tree clean
         run: test -z "$(git status --porcelain --untracked-files=all)"

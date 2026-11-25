@@ -1,8 +1,8 @@
-// amp stage-0 bootstrap driver (M0).
-// Compiles the stage-1 amp executable with the pinned system compiler and
+// cap stage-0 bootstrap driver (M0).
+// Compiles the stage-1 cap executable with the pinned system compiler and
 // the installed Boost, then verifies it. Never invokes CMake/Meson/Ninja.
-// Dogfoods amp-core: process execution and filesystem access go through
-// the amp-core adapters, not raw syscalls.
+// Dogfoods cap-core: process execution and filesystem access go through
+// the cap-core adapters, not raw syscalls.
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -11,18 +11,18 @@
 
 #include <boost/program_options.hpp>
 
-import amp.core.diagnostic;
-import amp.core.process;
-import amp.bootstrap.path_io;
-import amp.bootstrap.stage_status;
+import cap.core.diagnostic;
+import cap.core.process;
+import cap.bootstrap.path_io;
+import cap.bootstrap.stage_status;
 
 namespace {
 
-using amp::core::Diagnostic;
-using amp::core::ErrorCode;
-using amp::core::LocalProcessRunner;
-using amp::core::ProcessSpec;
 using boost::program_options::value;
+using cap::core::Diagnostic;
+using cap::core::ErrorCode;
+using cap::core::LocalProcessRunner;
+using cap::core::ProcessSpec;
 
 std::string find_cxx() {
   if (const char *cxx = std::getenv("CXX"))
@@ -41,10 +41,10 @@ Diagnostic missing(const std::string &path, const std::string &what) {
 
 int main(int argc, char **argv) {
   boost::program_options::options_description desc(
-      "amp stage-0 bootstrap driver");
+      "cap stage-0 bootstrap driver");
   desc.add_options()("boost-prefix", value<std::string>(),
                      "installed Boost prefix")(
-      "source-root", value<std::string>(), "amp source root")(
+      "source-root", value<std::string>(), "cap source root")(
       "output-dir", value<std::string>(), "directory for the stage-1 binary")(
       "cxx", value<std::string>()->default_value(find_cxx()), "C++ compiler");
   boost::program_options::variables_map vm;
@@ -63,15 +63,15 @@ int main(int argc, char **argv) {
   const std::string cxx = vm.at("cxx").as<std::string>();
 
   // Check that the installed version file is readable.
-  const auto canonical_prefix = amp::bootstrap::canonicalize(prefix);
+  const auto canonical_prefix = cap::bootstrap::canonicalize(prefix);
   if (!canonical_prefix)
     return fail(missing(prefix, "Boost prefix is not usable"));
   const auto boost_version =
       (std::filesystem::path(*canonical_prefix) / "boost-version.txt").string();
-  const auto version_file = amp::bootstrap::check_readable(boost_version);
+  const auto version_file = cap::bootstrap::check_readable(boost_version);
   if (!version_file) {
     return fail(Diagnostic{ErrorCode::integrity_failure,
-                           amp::core::Severity::error,
+                           cap::core::Severity::error,
                            "installed Boost lacks a readable boost-version.txt",
                            {},
                            {},
@@ -79,14 +79,14 @@ int main(int argc, char **argv) {
   }
 
   const std::string stage1_src = root + "/bootstrap/stage1.cpp";
-  if (!amp::bootstrap::check_readable(stage1_src))
+  if (!cap::bootstrap::check_readable(stage1_src))
     return fail(missing(stage1_src, "stage-1 source missing"));
-  const auto canonical_root = amp::bootstrap::canonicalize(root);
-  const auto canonical_out = amp::bootstrap::canonicalize(out_dir);
+  const auto canonical_root = cap::bootstrap::canonicalize(root);
+  const auto canonical_out = cap::bootstrap::canonicalize(out_dir);
   if (!canonical_root || !canonical_out)
     return fail(
         missing(!canonical_root ? root : out_dir, "directory is not usable"));
-  const auto module_template = *canonical_out + "/.amp-modules-XXXXXX";
+  const auto module_template = *canonical_out + "/.cap-modules-XXXXXX";
   std::vector<char> module_dir(module_template.begin(), module_template.end());
   module_dir.push_back('\0');
   if (::mkdtemp(module_dir.data()) == nullptr)
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
   // Compile the module before stage-1 with the pinned compiler.
   ProcessSpec build;
   build.cwd = module_dir.data();
-  // The child environment is built from this allowlist (amp-core contract:
+  // The child environment is built from this allowlist (cap-core contract:
   // empty allowlist means empty environment). PATH lets g++ locate the
   // linker; the compiler prefix itself is pinned on the command line.
   build.env_allowlist = {"PATH"};
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
         "-O2",     "-Wall",
         "-Wextra", "-fmodules",
         "-x",      "c++",
-        "-c",      *canonical_root + "/projects/amp-core/" + name + ".cppm",
+        "-c",      *canonical_root + "/projects/cap-core/" + name + ".cppm",
         "-o",      name + ".o"};
     auto module = LocalProcessRunner().run(build);
     if (!module)
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
     if (module->exit_code != 0) {
       std::printf("%s\n", module->stderr_text.c_str());
       return fail(Diagnostic{ErrorCode::internal,
-                             amp::core::Severity::error,
+                             cap::core::Severity::error,
                              "stage-1 module compile exited " +
                                  std::to_string(module->exit_code),
                              {},
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
     if (module->exit_code != 0) {
       std::printf("%s\n", module->stderr_text.c_str());
       return fail(Diagnostic{ErrorCode::internal,
-                             amp::core::Severity::error,
+                             cap::core::Severity::error,
                              "stage-1 module compile exited " +
                                  std::to_string(module->exit_code),
                              {},
@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
                 "-Wall",
                 "-Wextra",
                 "-fmodules",
-                "-I" + *canonical_root + "/projects/amp-core/include",
+                "-I" + *canonical_root + "/projects/cap-core/include",
                 "-I" + *canonical_prefix + "/include",
                 *canonical_root + "/bootstrap/stage1.cpp",
                 "diagnostic.o",
@@ -162,11 +162,11 @@ int main(int argc, char **argv) {
                 "-lboost_program_options",
                 "-lboost_json",
                 "-o",
-                *canonical_out + "/amp-stage1"};
+                *canonical_out + "/cap-stage1"};
   auto built = LocalProcessRunner().run(build);
   if (!built) {
     return fail(Diagnostic{ErrorCode::transient_io,
-                           amp::core::Severity::error,
+                           cap::core::Severity::error,
                            "stage-1 compile failed",
                            {},
                            {built.error()},
@@ -182,11 +182,11 @@ int main(int argc, char **argv) {
 
   // Verify stage-1: it must report its status JSON and pass its self-check.
   ProcessSpec run;
-  run.argv = {out_dir + "/amp-stage1", "--boost-prefix", *canonical_prefix};
+  run.argv = {out_dir + "/cap-stage1", "--boost-prefix", *canonical_prefix};
   auto status = LocalProcessRunner().run(run);
   if (!status) {
     return fail(Diagnostic{ErrorCode::integrity_failure,
-                           amp::core::Severity::error,
+                           cap::core::Severity::error,
                            "stage-1 verification failed",
                            {},
                            {status.error()},
@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
   }
   if (status->exit_code != 0) {
     Diagnostic d{ErrorCode::integrity_failure,
-                 amp::core::Severity::error,
+                 cap::core::Severity::error,
                  "stage-1 verification failed: exit " +
                      std::to_string(status->exit_code),
                  {},
@@ -202,16 +202,16 @@ int main(int argc, char **argv) {
                  ""};
     return fail(d);
   }
-  if (!amp::bootstrap::valid_stage_status(status->stdout_text)) {
+  if (!cap::bootstrap::valid_stage_status(status->stdout_text)) {
     return fail(Diagnostic{ErrorCode::integrity_failure,
-                           amp::core::Severity::error,
+                           cap::core::Severity::error,
                            "stage-1 output is not the status JSON",
                            {},
                            {},
                            ""});
   }
 
-  std::printf("bootstrap: stage-1 executable ready at %s/amp-stage1\n",
+  std::printf("bootstrap: stage-1 executable ready at %s/cap-stage1\n",
               out_dir.c_str());
   std::printf("%s\n", status->stdout_text.c_str());
   return 0;

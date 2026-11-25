@@ -1,14 +1,14 @@
-# Local AMP delivery plan
+# Local CAP delivery plan
 
 ## Scope and gates
 
-Deliver a working native `amp` for binary, multi-binary, library and
+Deliver a working native `cap` for binary, multi-binary, library and
 multi-project workspace builds, then complete the non-CI tasks in the
 [integrated roadmap](ROADMAP.md) in [M0–M6 order](RELEASE-PLAN-v1.4.md), followed
 by editor integration. Keep worktrees, builds, tests and evidence local. Do not
 configure Git remotes, CI or remote runners. Where future distribution features
 need a service, use local fixtures and do not publish or deploy to production.
-AMP-owned C++ interfaces are C++20 named modules built in C++26 mode.
+CAP-owned C++ interfaces are C++20 named modules built in C++26 mode.
 
 Verify every milestone locally on its exact SHA under [the quality
 policy](QUALITY.md), including the independent review and final audit gates.
@@ -22,7 +22,7 @@ without a network dependency or delegation to another build system.
 
 | Fixture | Observable result |
 | --- | --- |
-| A package with one `[[bin]]` | `amp build` produces an executable that runs and prints the expected text. |
+| A package with one `[[bin]]` | `cap build` produces an executable that runs and prints the expected text. |
 | A package with two `[[bin]]` entries | Both outputs build in one invocation and run independently. Selecting one builds only that target and its prerequisites. |
 | A `[lib]` package | A static archive is published, and a separate consumer links and runs against it. |
 | A virtual `[workspace]` with an app and a library member | Building the app resolves and builds its local library dependency first. Building the workspace produces the expected member outputs; package selection and default members are tested. |

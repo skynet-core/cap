@@ -1,6 +1,6 @@
 # ADR-0023 — Rename AMP to CAP
 
-Status: operator approved scope; owner review pending.
+Status: operator and affected owners approved the R1 naming contract.
 
 ## Decision
 

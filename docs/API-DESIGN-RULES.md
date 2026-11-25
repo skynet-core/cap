@@ -29,7 +29,7 @@ This specification inventories **planned** types; it does not claim to list ever
   comments that editor hover and reference generators can read.
 
 New and changed declarations must comply before merge. Backfill existing
-AMP-owned C++ as a separate work item; the full documentation requirement
+CAP-owned C++ as a separate work item; the full documentation requirement
 is not complete until that pass is verified.
 
 ```cpp
@@ -47,7 +47,7 @@ dependency):
 
 ```sh
 clang-doc -p "$BUILD_DIR" --doxygen --format=json --output="$DOC_DIR" \
-  "$REPO/projects/amp-core/diagnostic.cppm"
+  "$REPO/projects/cap-core/diagnostic.cppm"
 ```
 
 Pass the desired translation units explicitly, using absolute paths. Leave
@@ -75,4 +75,4 @@ anything the generator omits.
 For each planned class: document construction/injection, state machine, method signatures and guarantees, invariant, error table, concurrency contract, test matrix, benchmark budget, and observable metrics.
 
 ## Gates
-No merge without applicable API inventory and source documentation updates, passing tests, coverage and sanitizer evidence, and performance comparison for hot paths. Use C++26 for native amp code. The VS Code extension uses TypeScript as required by its host runtime.
+No merge without applicable API inventory and source documentation updates, passing tests, coverage and sanitizer evidence, and performance comparison for hot paths. Use C++26 for native cap code. The VS Code extension uses TypeScript as required by its host runtime.

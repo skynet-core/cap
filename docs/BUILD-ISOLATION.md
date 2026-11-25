@@ -1,6 +1,6 @@
 # Build isolation and action identity (normative, v1.4)
 
-**Status:** design contract, not implemented. Owners: `amp-build` (execution policy), `amp-cache` (fingerprints/CAS), `amp-core` (platform adapters), `amp-toolchain` (toolchain provenance).
+**Status:** design contract, not implemented. Owners: `cap-build` (execution policy), `cap-cache` (fingerprints/CAS), `cap-core` (platform adapters), `cap-toolchain` (toolchain provenance).
 
 ## Isolation levels
 - `strict`: supported-platform sandbox with declared read-only inputs, writable staging outputs, restricted environment, no network, explicit process allowlist. Required before advertising hermetic/remote execution.

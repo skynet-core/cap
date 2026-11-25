@@ -1,10 +1,10 @@
-# AMP bootstrap, local overrides, and build state
+# CAP bootstrap, local overrides, and build state
 .bootstrap/
-**/.amp/config.local.toml
-**/.amp/overrides.lock
-**/.amp/build/
-**/.amp/cache/
-**/.amp/private/
+**/.cap/config.local.toml
+**/.cap/overrides.lock
+**/.cap/build/
+**/.cap/cache/
+**/.cap/private/
 
 # Local editor databases and compiler outputs
 compile_commands.json
@@ -28,8 +28,8 @@ gmon.out
 
 # Editor extension dependencies and packages
 node_modules/
-/projects/amp-vscode/dist/
-/projects/amp-vscode/*.vsix
+/projects/cap-vscode/dist/
+/projects/cap-vscode/*.vsix
 
 # Machine-local credentials and environment files. Keep public templates visible.
 .aws/
@@ -50,3 +50,10 @@ id_rsa
 !.env.example
 !.env.sample
 !.env.template
+
+# Legacy .amp hygiene rules
+**/.amp/config.local.toml
+**/.amp/overrides.lock
+**/.amp/build/
+**/.amp/cache/
+**/.amp/private/

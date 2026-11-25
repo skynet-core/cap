@@ -2,10 +2,10 @@ module;
 
 #include <string>
 
-export module amp.bootstrap.stage_status;
+export module cap.bootstrap.stage_status;
 
-export namespace amp::bootstrap {
+export namespace cap::bootstrap {
 
 bool valid_stage_status(const std::string &output);
 
-} // namespace amp::bootstrap
+} // namespace cap::bootstrap

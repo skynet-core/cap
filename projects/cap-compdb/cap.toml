@@ -1,0 +1,11 @@
+manifest-version = 1
+[package]
+name = "cap-compdb"
+version = "0.1.0"
+[language]
+cpp = "c++26"
+[lib]
+name = "cap_compdb"
+type = "static"
+sources = ["src/**/*.cpp"]
+public-include-dirs = ["include"]

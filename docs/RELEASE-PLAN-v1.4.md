@@ -10,4 +10,4 @@ This is an updated implementation ordering, not evidence of completed code. Exis
 - **M5 ecosystem and distribution:** registry, plugin protocol, [manifest-declared library imports](ADR/0010-manifest-library-import-plugins.md) after isolation gates, verified publishing; optional remote CAS after isolation gates; remote workers only after security review.
 - **M6 release hardening:** multi-host compatibility, fault injection/fuzz, offline bootstrap, stage-2 self-host, signing and measured regression budgets.
 
-Cross-cutting gates: frozen versioned contracts before parallel agent lanes; every milestone must show executable fixtures and passing local and CI verification on its exact candidate commit. Development code changes are committed and pushed to `origin` topic branches. CI does not imply AMP has distributed build infrastructure.
+Cross-cutting gates: frozen versioned contracts before parallel agent lanes; every milestone must show executable fixtures and passing local and CI verification on its exact candidate commit. Development code changes are committed and pushed to `origin` topic branches. CI does not imply CAP has distributed build infrastructure.

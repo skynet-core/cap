@@ -4,18 +4,18 @@ Read README and architecture, feature catalog, schema and quality docs before ch
 
 ## Definition of done
 
-AMP-owned native C++ uses **C++20 named modules**, compiled in **C++26 mode**. New internal APIs use `export` and `import`, not public headers. Existing header-based code is migration work, not an exception for new APIs. Follow [ADR-0007](docs/ADR/0007-native-cxx-modules.md).
+CAP-owned native C++ uses **C++20 named modules**, compiled in **C++26 mode**. New internal APIs use `export` and `import`, not public headers. Existing header-based code is migration work, not an exception for new APIs. Follow [ADR-0007](docs/ADR/0007-native-cxx-modules.md).
 
 Compiles with pinned C++26 toolchain; tests pass; coverage thresholds met or waiver documented; benchmark baseline recorded for hot paths; sanitizer jobs pass where supported; public API and schema docs updated; security and failure cases reviewed; no unexpected source/build-system dependencies; acceptance criteria verified with logs.
 
-Compilation database compatibility is mandatory: preserve exact compile commands in `amp-build` and run `amp-compdb` regression tests when altering compile flags, targets, profiles, features or toolchains.
+Compilation database compatibility is mandatory: preserve exact compile commands in `cap-build` and run `cap-compdb` regression tests when altering compile flags, targets, profiles, features or toolchains.
 
 Every added/modified public class or interface MUST update its module API.md and corresponding tests. Consult docs/API-DESIGN-RULES.md.
 
-Document every AMP-owned C++ class/struct, public member, named constant, free function and method (public or private) in source using the [documentation contract](docs/API-DESIGN-RULES.md#source-documentation). Document input/output types and semantics, error conditions and any exceptions that escape. Verify IDE hover and local reference generation for the documented surface; module API.md alone does not satisfy this requirement.
+Document every CAP-owned C++ class/struct, public member, named constant, free function and method (public or private) in source using the [documentation contract](docs/API-DESIGN-RULES.md#source-documentation). Document input/output types and semantics, error conditions and any exceptions that escape. Verify IDE hover and local reference generation for the documented surface; module API.md alone does not satisfy this requirement.
 
 ## v1.3 non-negotiable Boost/bootstrap rules
-Use latest stable Boost in development; pin verified exact revision for CI/release. Root GNU Makefile must download Boost, run Boost bootstrap.sh, and compile Boost via b2. GNU Make and Boost.Build are bootstrap-only; amp package builds use amp native DAG exclusively. All amp production C++ remains C++26. Never claim bootstrap/test success without running it.
+Use latest stable Boost in development; pin verified exact revision for CI/release. Root GNU Makefile must download Boost, run Boost bootstrap.sh, and compile Boost via b2. GNU Make and Boost.Build are bootstrap-only; cap package builds use cap native DAG exclusively. All cap production C++ remains C++26. Never claim bootstrap/test success without running it.
 
 ## v1.4 superseding requirements
 `docs/AGENT-COORDINATION.md`, `docs/SCHEDULER.md`, `docs/BUILD-ISOLATION.md`, and `docs/BUILD-OBSERVABILITY.md` are normative. Freeze cross-module contracts before parallel work; use isolated branches and ownership checks. For all Boost fetch/build invocations, require explicit `BOOST_VERSION` and full verified `BOOST_COMMIT` (the v1.3 latest-by-default rule above is superseded). Do not claim hermeticity, remote caching, distributed compilation, a running daemon, or agent command implementation until demonstrated by tests.

@@ -18,9 +18,9 @@
 ## M0 implementation (2026-11-19)
 - Baseline commit of the v1.5 spec precedes all code changes.
 - Pinned system compiler to Homebrew GCC 16 (`g++-16`) as the default C++26 toolchain for bootstrap and quality targets (override via `CXX=`).
-- Implemented amp-core T01 slice: stable error taxonomy, structured `Diagnostic` (span, causal chain, remediation), canonical single-line `format()`, `Result<T>`/`Status` aliases — header-only, no new dependencies.
+- Implemented cap-core T01 slice: stable error taxonomy, structured `Diagnostic` (span, causal chain, remediation), canonical single-line `format()`, `Result<T>`/`Status` aliases — header-only, no new dependencies.
 - Added contract fixture `tests/golden/diagnostic_format.txt` and assert-based `tests/diagnostic_test.cpp`; verified with `make core-test` (all checks passed).
-- Implemented amp-core T02 slice (2026-11-20): `IFileSystem`/`LocalFileSystem`
+- Implemented cap-core T02 slice (2026-11-20): `IFileSystem`/`LocalFileSystem`
   (read, atomic temp+fsync+rename write, sorted enumerate, canonicalize) and
   `IProcessRunner`/`LocalProcessRunner` (direct execve, never a shell; cwd;
   env allowlist; stdin; timeout kill; exec-failure reporting). POSIX-only
@@ -33,7 +33,7 @@
   (g++-16 instrumented, lcov 2.6 + upstream genhtml, HTML report,
   no-regression gate vs recorded baseline 79.7% line / 66.9% branch;
   raw 85/75 policy gate deferred to T05 fault injection per
-  `projects/amp-core/COVERAGE-WAIVER.md`). Fault-injection tests added
+  `projects/cap-core/COVERAGE-WAIVER.md`). Fault-injection tests added
   (permission denials, exec EACCES, RLIMIT_NPROC fork exhaustion);
   env-allowlist logic extracted to testable `detail::build_envp`.
 - Boost 1.92.0 pin verified and built (2026-11-20): upstream tag `boost-1.92.0`
@@ -43,7 +43,7 @@
   `BOOST_BUILD_USER_CONFIG` — b2 ignores CC/CXX env vars and had silently
   selected the system gcc-15. Install digests in `.bootstrap/boost-install-digest.txt`;
   C++26 ABI link probe against filesystem/program_options/json passes.
-- M0 completed (2026-11-20): amp-core primitives finished — `Digest` (SHA-256
+- M0 completed (2026-11-20): cap-core primitives finished — `Digest` (SHA-256
   per FIPS 180-4, FIPS vectors incl. block-boundary lengths, 64-hex parse with
   negative cases, 100% line coverage), `StopToken`, `IClock`/`SystemClock`,
   `ILogger`/`CaptureLogger`; `digest_test.cpp` and `primitives_test.cpp`
@@ -51,10 +51,10 @@
   driver (`bootstrap/main.cpp`) and stage-1 artifact (`bootstrap/stage1.cpp`)
   implemented: the pinned compiler compiles stage-1 against the installed
   Boost without any external build system, and stage-1 self-checks Boost
-  provenance and the amp-core empty-input digest vector. `make bootstrap`
+  provenance and the cap-core empty-input digest vector. `make bootstrap`
   (BOOST_VERSION=1.92.0 BOOST_COMMIT=afdfa32505af73e3d208144b3f623f0096cb62b6)
-  produces and verifies `.bootstrap/bin/amp-stage1`. Sanitizers re-run green
+  produces and verifies `.bootstrap/bin/cap-stage1`. Sanitizers re-run green
   (UBSan caught a null-pointer memcpy on empty digests, fixed with a size
   guard); coverage gate green at 84.5% lines / 71.7% branches
   (baseline 79/66 unchanged until T05). API.md, TASKS.md and
-  COVERAGE-WAIVER.md updated; all five amp-core test suites pass.
+  COVERAGE-WAIVER.md updated; all five cap-core test suites pass.

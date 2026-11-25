@@ -15,7 +15,7 @@ Status: planned, not implemented. Each item must have acceptance tests and a doc
 ## Workspaces and dependencies
 - Virtual and package workspace roots, members/default-members/exclude, workspace inheritance, package selection, shared resolution, target dependency DAG, single committed workspace lock.
 - Registry, Git (commit/tag/branch resolved to immutable revision), path, workspace, optional, target-scoped, dev-only dependencies; semantic version solver, feature unification and conflict explanations.
-- Committed patches and ignored `.amp/config.local.toml` overrides; CLI overrides; precedence CLI > local > committed patch > normal; effective local resolution recorded separately; publishing disallows uncommitted local substitutions.
+- Committed patches and ignored `.cap/config.local.toml` overrides; CLI overrides; precedence CLI > local > committed patch > normal; effective local resolution recorded separately; publishing disallows uncommitted local substitutions.
 - TOML lockfiles with canonical package IDs, checksums, dependency edges; `--locked`, `--frozen`, offline; toolchain lock and workspace plugin lock separate.
 
 ## Toolchains and execution
@@ -28,9 +28,9 @@ Status: planned, not implemented. Each item must have acceptance tests and a doc
 - ASan, UBSan, TSan, MSan, leak sanitizer where supported, coverage, benchmarking, sampling profiling, PGO, frame pointers, baseline comparison, host capability matrix.
 
 ## Distribution and extensibility
-- `amp install --standalone` installs a relocatable `bin/` and `lib/` tree for a compatible Unix target, starting with Linux/ELF. CLI and environment overrides select the root.
+- `cap install --standalone` installs a relocatable `bin/` and `lib/` tree for a compatible Unix target, starting with Linux/ELF. CLI and environment overrides select the root.
 - Registry index, package fetch/publish/yank, checksums, auth, private registries and Git, provenance and signatures; registry server as separate deployment.
-- Cargo-style `amp-*` executable command plugins; install/list/search/update/uninstall, versioned manifest, workspace plugin locking, Git/path distribution, PATH opt-in, built-in precedence; optional future structured JSON protocol and read-only observers; no arbitrary build-graph mutation.
+- Cargo-style `cap-*` executable command plugins; install/list/search/update/uninstall, versioned manifest, workspace plugin locking, Git/path distribution, PATH opt-in, built-in precedence; optional future structured JSON protocol and read-only observers; no arbitrary build-graph mutation.
 - Manifest-declared CMake, Meson and Autotools library dependencies prepared by explicit, independently installed [import plugins](ADR/0010-manifest-library-import-plugins.md). Native builds use verified local results and never invoke the foreign build tools.
 
 ## CLI
@@ -40,11 +40,11 @@ Status: planned, not implemented. Each item must have acceptance tests and a doc
 No built-in CMake/Meson/Autotools importer or compatibility backend; no implicit third-party build-script execution; no mandatory repository layout; no inline test macro facility; no arbitrary dynamically loaded C++ plugin ABI; no guarantee that all toolchains/SDKs can be redistributed; no universal sanitizer support.
 
 ## LSP and compilation database (mandatory)
-Standard `compile_commands.json` export, managed compiler absolute paths, multi-project workspace aggregation, platform filtering, `_test.cpp` opt-in, profile/feature/target variants, generated paths and C++ module limitations, explicit active configuration, automatic export on build/check/test and no-build `amp compdb generate`. Owned by `amp-compdb`.
+Standard `compile_commands.json` export, managed compiler absolute paths, multi-project workspace aggregation, platform filtering, `_test.cpp` opt-in, profile/feature/target variants, generated paths and C++ module limitations, explicit active configuration, automatic export on build/check/test and no-build `cap compdb generate`. Owned by `cap-compdb`.
 
 ## Editor integration
 First-class clangd-compatible compilation database generation and official VS Code extension with build/run/test/debug/profile, target selection, multi-root workspaces and managed toolchain status.
 
 
 ## v1.3 Boost/bootstrap policy
-GNU Make is an explicit amp bootstrap exception. Root Makefile downloads latest stable Boost sources, bootstraps upstream b2, and compiles selected Boost libraries. Release/CI builds pin and verify exact Boost revision. No CMake/Meson/Ninja backend for amp packages. See `BOOTSTRAP.md` and `BOOST-POLICY.md`.
+GNU Make is an explicit cap bootstrap exception. Root Makefile downloads latest stable Boost sources, bootstraps upstream b2, and compiles selected Boost libraries. Release/CI builds pin and verify exact Boost revision. No CMake/Meson/Ninja backend for cap packages. See `BOOTSTRAP.md` and `BOOST-POLICY.md`.

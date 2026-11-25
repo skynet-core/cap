@@ -1,0 +1,141 @@
+name: Linux release packages
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+    paths:
+      - '.github/workflows/release.yml'
+      - 'tools/release/**'
+      - 'Makefile'
+      - 'bootstrap/**'
+      - 'projects/**'
+      - 'LICENSE'
+      - 'NOTICE'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package version (X.Y.Z)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  packages:
+    name: Build packages and test clean installs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    env:
+      GCC_IMAGE: docker.io/library/gcc@sha256:9af0ba1a5281cac2a79aa718b6d21af8670322cf4378198ee306efd5acc1955f
+      DEBIAN_IMAGE: docker.io/library/debian@sha256:ab3b3c8c5159eebfca4376430132d53c4d425f869c765ecbe47177a030da575d
+      FEDORA_IMAGE: quay.io/fedora/fedora-minimal@sha256:72a77b551af570471cc98fa8527bb436719f70a52687cd5aebd505e9bf3137f5
+      BOOST_VERSION: '1.92.0'
+      BOOST_COMMIT: afdfa32505af73e3d208144b3f623f0096cb62b6
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Select candidate version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          case "$GITHUB_REF_TYPE:$GITHUB_EVENT_NAME" in
+            tag:*) version=${GITHUB_REF_NAME#v} ;;
+            *:workflow_dispatch) version=$INPUT_VERSION ;;
+            *) version=0.0.0 ;;
+          esac
+          [[ $version =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          printf 'VERSION=%s\n' "$version" >> "$GITHUB_ENV"
+      - name: Build and package standalone CAP
+        run: |
+          work=$(mktemp -d "$RUNNER_TEMP/cap-release.XXXXXXXX")
+          mkdir "$work/dist"
+          docker run --rm -i --mount "type=bind,src=$PWD,dst=/src,readonly" \
+            --mount "type=bind,src=$work,dst=/work" --workdir /src \
+            -e VERSION -e BOOST_VERSION -e BOOST_COMMIT "$GCC_IMAGE" \
+            bash -euo pipefail -s <<'SH'
+          apt-get -qq update
+          apt-get -yqq --no-install-recommends install ca-certificates curl rpm
+          test "$(g++ -dumpfullversion)" = 16.2.0
+          make CC=/usr/local/bin/gcc CXX=/usr/local/bin/g++ \
+            BOOTSTRAP_ROOT=/work/bootstrap BOOST_JOBS=2 boost-build bootstrap-dev \
+            | tee /work/build.log
+          cli=$(sed -n 's/^development cap: //p' /work/build.log)
+          test -x "$cli"
+          # Use the bootstrap-dev objects; retain only the platform ELF runtime.
+          g++ -fmodules -pthread -static-libstdc++ -static-libgcc "${cli%/*}"/*.o \
+            /work/bootstrap/boost-install/lib/libboost_json.a -o /work/cap
+          dynamic=$(readelf -d /work/cap)
+          if grep -Eq '\((RPATH|RUNPATH)\)' <<< "$dynamic"; then exit 1; fi
+          needed=$(sed -n 's/.*Shared library: \[\(.*\)\]/\1/p' <<< "$dynamic")
+          test -n "$needed"
+          while IFS= read -r library; do
+            case "$library" in
+              libc.so.6|libm.so.6|ld-linux-x86-64.so.2) ;;
+              *) printf 'Unexpected runtime library: %s\n' "$library" >&2; exit 1 ;;
+            esac
+          done <<< "$needed"
+          sha256sum /work/cap | cut -d' ' -f1 > /work/cap.sha256
+          mkdir /work/licenses
+          cp LICENSE NOTICE /work/licenses/
+          cp /work/bootstrap/boost-src/LICENSE_1_0.txt /work/licenses/BOOST-LICENSE
+          gcc_sources=https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-16.2.0
+          curl -fsSL "$gcc_sources/COPYING3" -o /work/licenses/GCC-GPL-3
+          curl -fsSL "$gcc_sources/COPYING.RUNTIME" -o /work/licenses/GCC-RUNTIME-EXCEPTION
+          sha256sum --check --strict <<'SUMS'
+          8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903  /work/licenses/GCC-GPL-3
+          9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74  /work/licenses/GCC-RUNTIME-EXCEPTION
+          SUMS
+          bash tools/release/package-linux.sh "$VERSION" /work/cap /work/licenses /work/dist
+          SH
+          test -s "$work/dist/SHA256SUMS"
+          cap_sha=$(cat "$work/cap.sha256")
+          printf 'DIST=%s/dist\n' "$work" >> "$GITHUB_ENV"
+          printf 'CAP_SHA=%s\n' "$cap_sha" >> "$GITHUB_ENV"
+      - name: Verify packages and install on minimal images
+        run: |
+          (cd "$DIST" && sha256sum --check --strict SHA256SUMS)
+          for image in "$DEBIAN_IMAGE" "$FEDORA_IMAGE"; do docker pull "$image"; done
+          docker run --rm --network none --mount "type=bind,src=$DIST,dst=/packages,readonly" \
+            -e VERSION -e CAP_SHA "$DEBIAN_IMAGE" sh -eu -c '
+              dpkg --path-include=/usr/share/doc/cap-cli/"*" --install "/packages/cap-cli_${VERSION}_amd64.deb"
+              actual=$(sha256sum /usr/bin/cap)
+              test "${actual%% *}" = "$CAP_SHA"
+              /usr/bin/cap build --help
+              test -s /usr/share/doc/cap-cli/NOTICE
+              dpkg --purge cap-cli
+              test ! -e /usr/bin/cap
+            '
+          docker run --rm --network none --mount "type=bind,src=$DIST,dst=/packages,readonly" \
+            -e VERSION -e CAP_SHA "$FEDORA_IMAGE" sh -eu -c '
+              rpm --install "/packages/cap-cli-${VERSION}-1.x86_64.rpm"
+              actual=$(sha256sum /usr/bin/cap)
+              test "${actual%% *}" = "$CAP_SHA"
+              /usr/bin/cap build --help
+              test -s /usr/share/doc/cap-cli/NOTICE
+              rpm --erase cap-cli
+              test ! -e /usr/bin/cap
+            '
+          docker run --rm --network none --user 65534:65534 \
+            --mount "type=bind,src=$DIST,dst=/packages,readonly" \
+            -e VERSION -e CAP_SHA "$DEBIAN_IMAGE" sh -eu -c '
+              prefix=$(mktemp -d)
+              tar -xzf "/packages/cap-cli-${VERSION}-linux-x86_64.tar.gz" -C "$prefix"
+              actual=$(sha256sum "$prefix/bin/cap")
+              test "${actual%% *}" = "$CAP_SHA"
+              mv "$prefix" "$prefix-relocated"
+              "$prefix-relocated/bin/cap" build --help
+              test -s "$prefix-relocated/share/doc/cap-cli/NOTICE"
+            '
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cap-linux-x86_64-${{ steps.version.outputs.version }}
+          path: ${{ env.DIST }}/
+          if-no-files-found: error

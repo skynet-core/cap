@@ -1,11 +1,11 @@
 # Mandatory engineering quality standard
 
 ## Code quality
-C++26 mandatory for amp implementation. SOLID mandatory and reviewed at every public boundary. Strong types, explicit ownership, RAII, `std::expected`-style errors, no unchecked exceptions across module boundaries, cancellation-aware process/network APIs, structured diagnostics. Prefer Boost.Asio/Process/Graph/JSON when appropriate; TOML parser such as toml++; SQLite for cache metadata. C++26 reflection only behind `amp-meta` and proven compiling fixtures. All nontrivial APIs require contracts, invariants and negative tests.
+C++26 mandatory for cap implementation. SOLID mandatory and reviewed at every public boundary. Strong types, explicit ownership, RAII, `std::expected`-style errors, no unchecked exceptions across module boundaries, cancellation-aware process/network APIs, structured diagnostics. Prefer Boost.Asio/Process/Graph/JSON when appropriate; TOML parser such as toml++; SQLite for cache metadata. C++26 reflection only behind `cap-meta` and proven compiling fixtures. All nontrivial APIs require contracts, invariants and negative tests.
 
 ## C++ Core Guidelines review
 
-Review AMP-owned C++, including bootstrap code, tests and fixtures, against the
+Review CAP-owned C++, including bootstrap code, tests and fixtures, against the
 [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines),
 starting with [F: Functions](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#s-functions).
 Check that each function performs one logical operation (F.2–F.3), parameter
@@ -55,7 +55,7 @@ Each performance-sensitive module must define named benchmarks, fixed input data
 Run the applicable checks locally on the exact candidate commit: build with the pinned C++26 toolchain, unit/integration/golden tests, coverage, sanitizers on supported targets, format/static analysis, license/security checks, bootstrap-from-clean-host smoke, self-host stage comparison, frozen/offline build smoke, documentation/API contract updates. Also require the [Linux build and test job](../.github/workflows/ci.yml) on the exact candidate SHA. It checks the compiler/module probe, source-built Boost and stage-1 bootstrap, core unit tests, the development CLI, and the four native build modes. It does not test `make self-host` or replace local sanitizer, coverage, or editor gates. Record the commit, toolchain, commands, exit statuses, logs and CI URL; document unsupported configurations without marking them passed. All regressions need a test. No fabricated benchmarks or green checks. Waivers must state owner, reason, expiry and mitigation.
 
 ## LSP compatibility gate
-Every change to compiler command planning or target filtering must pass amp-compdb golden JSON tests and clangd workspace smoke tests (where supported). Benchmark export speed for large workspaces and profile refresh latency.
+Every change to compiler command planning or target filtering must pass cap-compdb golden JSON tests and clangd workspace smoke tests (where supported). Benchmark export speed for large workspaces and profile refresh latency.
 
 For new or changed C++ declarations, review the [source documentation contract](API-DESIGN-RULES.md#source-documentation) before merging. On documentation changes, capture a representative clangd hover and a local generated-reference sample (including an implementation-only or private symbol when supported). Record unsupported tooling separately. Lint, formatting and a passing compiler do not verify that comments are present or accurate.
 
@@ -64,7 +64,7 @@ Every public class/interface must be inventoried in its module API.md with metho
 
 
 ## v1.3 Boost/bootstrap policy
-GNU Make is an explicit amp bootstrap exception. Root Makefile downloads latest stable Boost sources, bootstraps upstream b2, and compiles selected Boost libraries. Release/CI builds pin and verify exact Boost revision. No CMake/Meson/Ninja backend for amp packages. See `BOOTSTRAP.md` and `BOOST-POLICY.md`.
+GNU Make is an explicit cap bootstrap exception. Root Makefile downloads latest stable Boost sources, bootstraps upstream b2, and compiles selected Boost libraries. Release/CI builds pin and verify exact Boost revision. No CMake/Meson/Ninja backend for cap packages. See `BOOTSTRAP.md` and `BOOST-POLICY.md`.
 
 ## v1.4 additional mandatory verification
 Scheduler: memory/CPU admission, starvation, process-tree cancellation, 10k-node benchmark and TSan stress. Isolation: undeclared read, environment leak, network attempt, generated-file race, SDK/toolchain change, symlink traversal, corruption and interrupted publication. Agent workflow: ownership checks, versioned contract fixtures and integration evidence. Observability: trace schema goldens, redaction, stable cache-miss reasons and measured overhead. Offline/preseeded Boost bootstrap must verify pinned provenance; an unverified checkout must fail. Remote execution is optional and must pass separate authentication, worker compatibility and integrity gates before release claims.
