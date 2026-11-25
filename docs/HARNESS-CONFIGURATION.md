@@ -8,9 +8,9 @@ Keep the effective agent configuration, private acceptance records, review ident
 
 ## OpenCode workflow sessions
 
-Use [`opencode-workflow.json`](../tools/agent-harness/opencode-workflow.json) with OpenCode 2.3.2. The default agent, `amp-sol`, handles intake and planning. Workers `amp-terra` and `amp-luna` and reviewers `amp-sol-review` and `amp-astra` are hidden from interactive selection and launched by explicit agent ID in fresh sessions. Only workers receive edit permissions. Their shell commands require approval. The milestone review and audit profiles deny all tools and use the supplied evidence bundle.
+Use [`opencode-workflow.json`](../tools/agent-harness/opencode-workflow.json) with OpenCode 2.3.2. The default agent, `cap-sol`, handles intake and planning. Workers `cap-terra` and `cap-luna` and reviewers `cap-sol-review` and `cap-astra` are hidden from interactive selection and launched by explicit agent ID in fresh sessions. Only workers receive edit permissions. Their shell commands require approval. The milestone review and audit profiles deny all tools and use the supplied evidence bundle.
 
-The launcher must verify that each configured OpenAI model ID exists and resolves to the matching policy model before sending prompts. Store the workflow profile in a runner-controlled OpenCode configuration outside the worker worktree. Start isolated instances with `--standalone` and pass both `--agent` and the verified `--model` on scripted runs. The runner must send the raw user prompt only to `amp-sol`, derived task context to workers, and sanitized evidence to each reviewer in a clean directory. It owns worker scheduling, revision tracking, and promotion. See the [harness README](../tools/agent-harness/README.md) and [OpenCode agent configuration](https://opencode.ai/docs/agents/).
+The launcher must verify that each configured OpenAI model ID exists and resolves to the matching policy model before sending prompts. Store the workflow profile in a runner-controlled OpenCode configuration outside the worker worktree. Start isolated instances with `--standalone` and pass both `--agent` and the verified `--model` on scripted runs. The runner must send the raw user prompt only to `cap-sol`, derived task context to workers, and sanitized evidence to each reviewer in a clean directory. It owns worker scheduling, revision tracking, and promotion. See the [harness README](../tools/agent-harness/README.md) and [OpenCode agent configuration](https://opencode.ai/docs/agents/).
 
 ## Local Qwen fallback and smoke tests
 
@@ -23,6 +23,6 @@ Copy `tools/agent-harness/opencode.json` into a disposable task worktree. It dec
 Copy `tools/agent-harness/codex-config.toml` into an isolated Codex home as `config.toml` (see README). It defines a custom `vllm` provider with `wire_api = "responses"`; verify your vLLM supports `/v1/responses` and your checkpoint supports required tool calls. If Responses support is missing, this sample is **not** plug-and-play; update vLLM/Codex or choose OpenCode's Chat Completions path. Codex's tool permissions and sandbox mode must be checked for your installed CLI version. Do not use full-access or bypass approvals to make an incompatible setup appear functional.
 
 ### Serving example
-`tools/agent-harness/serve-vllm.sh` prints/executes a baseline command with `AMP_MODEL` required and `AMP_TP` configurable. Bind to localhost. Check `nvidia-smi` and vLLM `/v1/models` and `/metrics` before running the benchmark. A 96 GB total across devices does not guarantee a 96 GB contiguous KV cache.
+`tools/agent-harness/serve-vllm.sh` prints/executes a baseline command with `CAP_MODEL` required and `CAP_TP` configurable. Bind to localhost. Check `nvidia-smi` and vLLM `/v1/models` and `/metrics` before running the benchmark. A 96 GB total across devices does not guarantee a 96 GB contiguous KV cache.
 
-The [standalone benchmark](../tools/amp-agent-benchmark/README.md) measures experiments with model-generated patches in a disposable environment.
+The [standalone benchmark](../tools/cap-agent-benchmark/README.md) measures experiments with model-generated patches in a disposable environment.

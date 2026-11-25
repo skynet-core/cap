@@ -6,9 +6,9 @@ module;
 #include <boost/json/basic_parser_impl.hpp>
 #include <boost/version.hpp>
 
-module amp.bootstrap.stage_status;
+module cap.bootstrap.stage_status;
 
-namespace amp::bootstrap {
+namespace cap::bootstrap {
 
 namespace {
 struct member_counter {
@@ -83,7 +83,7 @@ bool valid_stage_status(const std::string &output) {
   if (ec || parser.handler().count != object.size())
     return false;
   const auto *stage = object.if_contains("stage");
-  const auto *core = object.if_contains("amp_core");
+  const auto *core = object.if_contains("cap_core");
   const auto *boost = object.if_contains("boost");
   const auto *check = object.if_contains("self_check");
   return stage && stage->is_int64() && stage->as_int64() == 1 && core &&
@@ -92,4 +92,4 @@ bool valid_stage_status(const std::string &output) {
          check && check->is_string() && check->as_string() == "passed";
 }
 
-} // namespace amp::bootstrap
+} // namespace cap::bootstrap

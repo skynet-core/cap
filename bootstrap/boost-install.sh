@@ -29,7 +29,7 @@ snapshot() {
 		sort -z "$tmp/entries" >"$tmp/sorted" || exit 1
 		find include lib -type f -print0 >"$tmp/files" || exit 1
 		sort -z "$tmp/files" >"$tmp/sorted-files" || exit 1
-		printf 'amp-boost-install-v1\n%s\n%s\n' "$version" "$commit" || exit 1
+		printf 'cap-boost-install-v1\n%s\n%s\n' "$version" "$commit" || exit 1
 		cat "$tmp/sorted" || exit 1
 		xargs -0 -r sha256sum --zero <"$tmp/sorted-files" || exit 1
 	) >"$tmp/snapshot" || fail 'cannot inventory installed files or unsupported entry'

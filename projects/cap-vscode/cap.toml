@@ -1,0 +1,2 @@
+# cap-vscode is a TypeScript extension, not an cap C++ package.
+# Its package.json will be authored in the implementation phase.

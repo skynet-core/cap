@@ -4,7 +4,7 @@ Status: accepted for the workflow specification. Runner implementation is pendin
 
 ## Context
 
-The v1.5 development workflow specified a local Qwen coordinator and three Qwen workers, with Sol reviewing milestones. The requested `ai-workflow` profile sets role-specific permissions, shared limits and a human production gate. AMP has bootstrap and core code, local agent smoke-test profiles and a standalone benchmark. It has no unattended runner.
+The v1.5 development workflow specified a local Qwen coordinator and three Qwen workers, with Sol reviewing milestones. The requested `ai-workflow` profile sets role-specific permissions, shared limits and a human production gate. CAP has bootstrap and core code, local agent smoke-test profiles and a standalone benchmark. It has no unattended runner.
 
 ## Decision
 
@@ -16,4 +16,4 @@ The runner owns the frozen request and acceptance records, worker admission, rev
 
 ## Consequences
 
-The profile supersedes the v1.5 Qwen orchestration policy. The local vLLM examples and experimental benchmark remain available for their existing use. The local operator carries out the runner's responsibilities until unattended automation is enabled. Verified provider bindings remain required. The workflow has no AMP runtime dependencies.
+The profile supersedes the v1.5 Qwen orchestration policy. The local vLLM examples and experimental benchmark remain available for their existing use. The local operator carries out the runner's responsibilities until unattended automation is enabled. Verified provider bindings remain required. The workflow has no CAP runtime dependencies.

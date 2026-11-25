@@ -10,7 +10,7 @@
 Task template: Goal / Inputs / Outputs / Dependencies / Design constraints / Test cases / Coverage / Benchmark and profiler baseline / Security checks / Definition of done / Evidence.
 
 ## v1.4 parallel workflow
-Use `AGENT-COORDINATION.md` for task claims, ownership, contract freeze, cross-lane review and integration gates. `amp dev` coordination commands are proposals, not executable commands in this archive. Never claim a task is complete solely because its Markdown checkbox was changed.
+Use `AGENT-COORDINATION.md` for task claims, ownership, contract freeze, cross-lane review and integration gates. `cap dev` coordination commands are proposals, not executable commands in this archive. Never claim a task is complete solely because its Markdown checkbox was changed.
 
 ## Role-based development workflow
 

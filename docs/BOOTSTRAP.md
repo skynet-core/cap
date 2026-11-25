@@ -1,7 +1,7 @@
 # Bootstrap specification v1.3 (normative)
 
 ## Allowed bootstrap prerequisites
-System C++26-capable compiler, Git, GNU Make, POSIX shell and standard host utilities. A network connection is required unless verified Boost sources are preseeded. GNU Make is permitted **only** to bootstrap amp and orchestrate quality commands. Boost's own `bootstrap.sh` and `b2` are explicitly permitted **only** to build Boost itself. CMake, Meson, Ninja and third-party build backends remain prohibited for amp projects.
+System C++26-capable compiler, Git, GNU Make, POSIX shell and standard host utilities. A network connection is required unless verified Boost sources are preseeded. GNU Make is permitted **only** to bootstrap cap and orchestrate quality commands. Boost's own `bootstrap.sh` and `b2` are explicitly permitted **only** to build Boost itself. CMake, Meson, Ninja and third-party build backends remain prohibited for cap projects.
 
 ## Pipeline
 1. `make prerequisites`: verify tools and test compiler acceptance of `-std=c++26`. This remains flag acceptance only; it establishes neither module nor reflection support.
@@ -17,7 +17,7 @@ System C++26-capable compiler, Git, GNU Make, POSIX shell and standard host util
 Do not claim success if only Boost builds. The stage-0 driver and stage-1 artifact are implemented as of M0; `make bootstrap` fails on source identity, local install integrity, compile or self-check errors. For releases, pin Boost and its submodules, check provenance, verify compiler and library ABI, test offline/preseeded builds, and run integration, coverage, sanitizer and performance gates. See `BOOST-POLICY.md`.
 
 ## Acceptance criteria
-A supported clean host can build Boost via Git + GNU Make + upstream Boost bootstrap/b2, compile amp with C++26, self-host, and run the full quality suite. Trace processes to prove that amp builds do not invoke third-party build systems. Document any unsupported host platforms.
+A supported clean host can build Boost via Git + GNU Make + upstream Boost bootstrap/b2, compile cap with C++26, self-host, and run the full quality suite. Trace processes to prove that cap builds do not invoke third-party build systems. Document any unsupported host platforms.
 
 ## v1.4 superseding reproducibility policy
 The v1.3 `latest` development default above is superseded: Boost fetch/build requires explicit `BOOST_VERSION=<exact-tag-version>` and `BOOST_COMMIT=<verified-full-40-hex-commit>`. Both values must be independently verified against trusted upstream provenance. Existing checkout reuse must verify the revision; mismatches fail and require explicit `make boost-clean`. A fully preseeded checkout can be used offline after revision/submodule checks. `make prerequisites` remains a lightweight compiler flag probe; full feature and ABI probes are separate required tests. See `BOOST-POLICY.md`.
@@ -50,13 +50,13 @@ make bootstrap-dev BOOTSTRAP_ROOT=/absolute/local/root \
 The target verifies the existing install and pin, without fetching or building
 Boost. It compiles the existing CLI modules with the configured pinned GCC in
 C++26 mode into a fresh private `dev/run.*` directory and prints its absolute
-executable path after `amp build --help` succeeds. Failed directories are
+executable path after `cap build --help` succeeds. Failed directories are
 retained. The local install, inventory, compiler and environment must be trusted
 and not concurrently modified; this is not authenticated or hermetic. This
-target neither changes the stage-0/1 protocol nor installs AMP or supplies a
+target neither changes the stage-0/1 protocol nor installs CAP or supplies a
 Make backend for package builds. The development CLI builds standalone binaries
 and static libraries. Use `--bin NAME` or `--lib` to narrow the selection. See
-the [static library fixture](../projects/amp-cli/tests/fixtures/native-library/README.md)
+the [static library fixture](../projects/cap-cli/tests/fixtures/native-library/README.md)
 for an example. In a local workspace, `--workspace` selects all members and
 `--package NAME` selects one; otherwise use the manifest's default members or
 the current member. Local static archive dependencies and declared SDK libraries

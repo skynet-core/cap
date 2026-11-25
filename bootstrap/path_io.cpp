@@ -3,20 +3,20 @@ module;
 #include <expected>
 #include <string>
 
-module amp.bootstrap.path_io;
+module cap.bootstrap.path_io;
 
-import amp.core.diagnostic;
-import amp.core.filesystem;
+import cap.core.diagnostic;
+import cap.core.filesystem;
 
-namespace amp::bootstrap {
-amp::core::Result<std::string> canonicalize(const std::string &path) {
-  return amp::core::LocalFileSystem().canonicalize(path);
+namespace cap::bootstrap {
+cap::core::Result<std::string> canonicalize(const std::string &path) {
+  return cap::core::LocalFileSystem().canonicalize(path);
 }
 
-amp::core::Status check_readable(const std::string &path) {
-  auto result = amp::core::LocalFileSystem().read(path);
+cap::core::Status check_readable(const std::string &path) {
+  auto result = cap::core::LocalFileSystem().read(path);
   if (!result)
     return std::unexpected(result.error());
   return {};
 }
-} // namespace amp::bootstrap
+} // namespace cap::bootstrap

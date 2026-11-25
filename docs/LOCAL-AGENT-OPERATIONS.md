@@ -1,6 +1,6 @@
 # Agent development operations
 
-The [`ai-workflow` profile](../tools/agent-harness/ai-workflow.yaml) is the normative development policy. Commit code changes and push them to isolated topic branches; run CI in addition to local checks. The local operator still performs the runner responsibilities below. Keep private review records, credentials, and unsanitized evidence local. [Agent Coordination](AGENT-COORDINATION.md) defines lane ownership and contract freeze. The workflow runs outside the AMP native build engine.
+The [`ai-workflow` profile](../tools/agent-harness/ai-workflow.yaml) is the normative development policy. Commit code changes and push them to isolated topic branches; run CI in addition to local checks. The local operator still performs the runner responsibilities below. Keep private review records, credentials, and unsanitized evidence local. [Agent Coordination](AGENT-COORDINATION.md) defines lane ownership and contract freeze. The workflow runs outside the CAP native build engine.
 
 ## Roles and authority
 
@@ -28,7 +28,7 @@ Each claim reserves one ready task and one worker slot atomically. The runner ch
 - **Authoring fallback.** Dispatch the pinned local Qwen worker only after the runner records provider-confirmed quota or rate limits that prevent both Terra and Luna from taking work. Full worker slots, generic errors, missing bindings and exhausted project limits do not qualify. Qwen gets the same scoped task, worktree, checks and applicable limits; it receives neither the raw user prompt nor review authority. Recheck eligibility before each dispatch and prefer Terra or Luna again as soon as either can take the work.
 - **Revisions.** Count the initial pass as round zero. A round starts when the runner dispatches a repair plan for a returned submission. Repairs in the same plan may run in parallel. Persist a separate counter for each stable task ID across reassignments, request revisions and restarts. Preserve earlier repair records; do not split or re-ID a task to reset its counter. When a task needs a fourth round, block further repair dispatch for that task and promotion of any milestone that requires it.
 
-AMP sets no project-wide or per-call model spending cap and does not require pricing or spend records for dispatch. Provider quotas and billing still apply.
+CAP sets no project-wide or per-call model spending cap and does not require pricing or spend records for dispatch. Provider quotas and billing still apply.
 
 ## Verification and promotion
 
@@ -43,7 +43,7 @@ High-risk changes to the scheduler, sandbox, cache keys, resolver, toolchain sec
 
 ## Branch policy
 
-- **Topic branches carry development code.** Commit and push every scoped code change to its assigned branch on `origin`. Keep credentials outside the worktree and put private local evidence in ignored `.amp/private/` or outside Git. Before a public push, review the staged paths and all newly reachable commits for secrets, generated outputs, and private evidence. Ignore rules do not protect tracked files or old commits. If history is unsafe, export only reviewed changes onto a clean public base; do not push or rewrite the original branch.
+- **Topic branches carry development code.** Commit and push every scoped code change to its assigned branch on `origin`. Keep credentials outside the worktree and put private local evidence in ignored `.cap/private/` or outside Git. Before a public push, review the staged paths and all newly reachable commits for secrets, generated outputs, and private evidence. Ignore rules do not protect tracked files or old commits. If history is unsafe, export only reviewed changes onto a clean public base; do not push or rewrite the original branch.
 - **`develop` integrates promoted milestones; `main` carries releases.** The operator requires the **Linux build and test** status check on both protected branches. Only update protected refs after their approval gates pass. Routine topic pushes do not authorize release tags, package publication, or deployment.
 
 ## Runner acceptance and measurement
