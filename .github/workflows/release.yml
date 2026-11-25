@@ -6,6 +6,7 @@ on:
     tags: ['v*']
     paths:
       - '.github/workflows/release.yml'
+      - '.github/workflows/ci.yml'
       - 'tools/release/**'
       - 'Makefile'
       - 'bootstrap/**'
@@ -36,6 +37,10 @@ jobs:
       FEDORA_IMAGE: quay.io/fedora/fedora-minimal@sha256:72a77b551af570471cc98fa8527bb436719f70a52687cd5aebd505e9bf3137f5
       BOOST_VERSION: '1.92.0'
       BOOST_COMMIT: afdfa32505af73e3d208144b3f623f0096cb62b6
+      BOOST_CACHE_PATHS: |
+        .bootstrap/boost-install
+        .bootstrap/boost-install.record
+        .bootstrap/boost-license.txt
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -53,19 +58,40 @@ jobs:
           [[ $version =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
           printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
           printf 'VERSION=%s\n' "$version" >> "$GITHUB_ENV"
+      - name: Restore verified Boost install
+        id: boost-cache
+        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: ${{ env.BOOST_CACHE_PATHS }}
+          key: cap-boost-sdk-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.BOOST_VERSION }}-${{ env.BOOST_COMMIT }}-${{ hashFiles('Makefile', 'bootstrap/boost-install.sh', '.github/workflows/ci.yml', '.github/workflows/release.yml') }}
       - name: Build and package standalone CAP
+        env:
+          BOOST_CACHE_HIT: ${{ steps.boost-cache.outputs.cache-hit }}
         run: |
           work=$(mktemp -d "$RUNNER_TEMP/cap-release.XXXXXXXX")
-          mkdir "$work/dist"
+          mkdir -p "$work/dist" .bootstrap
           docker run --rm -i --mount "type=bind,src=$PWD,dst=/src,readonly" \
             --mount "type=bind,src=$work,dst=/work" --workdir /src \
-            -e VERSION -e BOOST_VERSION -e BOOST_COMMIT "$GCC_IMAGE" \
+            --mount "type=bind,src=$PWD/.bootstrap,dst=/work/bootstrap" \
+            -e VERSION -e BOOST_VERSION -e BOOST_COMMIT -e BOOST_CACHE_HIT "$GCC_IMAGE" \
             bash -euo pipefail -s <<'SH'
+          test "$(g++ -dumpfullversion)" = 16.2.0
+          if [[ $BOOST_CACHE_HIT == true ]]; then
+            printf '%s\n' 'Boost SDK cache hit; verifying without rebuilding.'
+          else
+            make CC=/usr/local/bin/gcc CXX=/usr/local/bin/g++ \
+              BOOTSTRAP_ROOT=/work/bootstrap BOOST_JOBS=2 boost-build
+            cp /work/bootstrap/boost-src/LICENSE_1_0.txt /work/bootstrap/boost-license.txt
+          fi
+          sh bootstrap/boost-install.sh verify /work/bootstrap /work/bootstrap/boost-install \
+            "$BOOST_VERSION" "$BOOST_COMMIT"
+          sha256sum --check --strict <<'SUMS'
+          c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566  /work/bootstrap/boost-license.txt
+          SUMS
           apt-get -qq update
           apt-get -yqq --no-install-recommends install ca-certificates curl rpm
-          test "$(g++ -dumpfullversion)" = 16.2.0
           make CC=/usr/local/bin/gcc CXX=/usr/local/bin/g++ \
-            BOOTSTRAP_ROOT=/work/bootstrap BOOST_JOBS=2 boost-build bootstrap-dev \
+            BOOTSTRAP_ROOT=/work/bootstrap bootstrap-dev \
             | tee /work/build.log
           cli=$(sed -n 's/^development cap: //p' /work/build.log)
           test -x "$cli"
@@ -85,7 +111,7 @@ jobs:
           sha256sum /work/cap | cut -d' ' -f1 > /work/cap.sha256
           mkdir /work/licenses
           cp LICENSE NOTICE /work/licenses/
-          cp /work/bootstrap/boost-src/LICENSE_1_0.txt /work/licenses/BOOST-LICENSE
+          cp /work/bootstrap/boost-license.txt /work/licenses/BOOST-LICENSE
           gcc_sources=https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-16.2.0
           curl -fsSL "$gcc_sources/COPYING3" -o /work/licenses/GCC-GPL-3
           curl -fsSL "$gcc_sources/COPYING.RUNTIME" -o /work/licenses/GCC-RUNTIME-EXCEPTION
@@ -99,6 +125,12 @@ jobs:
           cap_sha=$(cat "$work/cap.sha256")
           printf 'DIST=%s/dist\n' "$work" >> "$GITHUB_ENV"
           printf 'CAP_SHA=%s\n' "$cap_sha" >> "$GITHUB_ENV"
+      - name: Save verified Boost install
+        if: github.event_name == 'push' && github.ref_type == 'branch' && steps.boost-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: ${{ env.BOOST_CACHE_PATHS }}
+          key: ${{ steps.boost-cache.outputs.cache-primary-key }}
       - name: Verify packages and install on minimal images
         run: |
           (cd "$DIST" && sha256sum --check --strict SHA256SUMS)
