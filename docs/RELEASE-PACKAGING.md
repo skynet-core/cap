@@ -1,9 +1,9 @@
 # Linux release packaging
 
 The [packaging workflow](../.github/workflows/release.yml) runs on relevant
-branch pushes, `vX.Y.Z` tag pushes, and manual runs with an `X.Y.Z` version.
-Branch pushes use `0.0.0` for test packages. The job uploads artifacts only
-after the package checks pass; it does not create tags or GitHub Releases.
+topic pushes, `vX.Y.Z` tag pushes, and manual runs with an `X.Y.Z` version.
+Topic pushes use `0.0.0` for test packages. The job uploads artifacts only
+after the package checks pass; it does not publish releases itself.
 
 The workflow uses pinned GCC 16.2.0 and source-built Boost 1.92.0. It links
 the development CLI with the GCC runtime and Boost linked statically. The
@@ -24,7 +24,20 @@ installed executable is byte-for-byte the linked executable and that
 `cap build --help` runs without a toolchain installed. Use the regular
 [build and test workflow](../.github/workflows/ci.yml) for end-to-end builds.
 
-Production publication is separate. Use the artifacts from a passing run
-and apply the [approval gates](LOCAL-AGENT-OPERATIONS.md#verification-and-promotion)
-to the exact commit, target, and artifact digests. A successful package
-job alone is not release approval.
+## Develop prereleases
+
+After a human merges a milestone PR into `develop`, the
+[develop workflow](../.github/workflows/develop-prerelease.yml) identifies
+the merged PR by its result commit. It tests that commit, builds and
+install-tests the same three package formats, then publishes a GitHub
+prerelease with `SHA256SUMS` and `CHANGELOG.md`. Direct pushes and merges
+from other branches do not publish. The GitHub release notes and changelog
+include the milestone PR summary, its manual verification instructions,
+and a link to the changes since the previous develop tip.
+Use `## Changelog` and `## Manual verification` headings in the milestone
+PR description so reviewers and testers see the same instructions.
+
+Previews use package version `0.0.<run number>` and a tag bound to the full
+merge commit. They are not marked latest. Stable release publication is
+separate: apply the [approval gates](LOCAL-AGENT-OPERATIONS.md#verification-and-promotion)
+to the exact commit, target, and artifact digests.

@@ -2,8 +2,10 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    branches: ['**', '!develop']
   pull_request:
+    types: [opened, synchronize, reopened, edited]
+  workflow_call:
 
 permissions:
   contents: read
@@ -27,6 +29,32 @@ jobs:
         .bootstrap/boost-install.record
         .bootstrap/boost-license.txt
     steps:
+      - name: Check pull request routing
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BASE: ${{ github.base_ref }}
+          PR_HEAD: ${{ github.head_ref }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          case "$PR_BASE" in
+            milestone/*)
+              [[ $PR_HEAD != milestone/* && $PR_HEAD != develop && $PR_HEAD != main ]]
+              ;;
+            develop)
+              [[ $PR_HEAD == milestone/* && $PR_HEAD_REPO == "$GITHUB_REPOSITORY" ]] ||
+                { printf '%s\n' 'Only repository milestone branches may target develop.' >&2; exit 1; }
+              grep -Fqx '## Changelog' <<< "$PR_BODY"
+              grep -Fqx '## Manual verification' <<< "$PR_BODY"
+              ;;
+            main)
+              [[ $PR_HEAD == develop && $PR_HEAD_REPO == "$GITHUB_REPOSITORY" ]]
+              ;;
+            *)
+              printf '%s\n' 'Task pull requests must target milestone/<name>.' >&2
+              exit 1
+              ;;
+          esac
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false

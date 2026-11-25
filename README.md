@@ -22,7 +22,7 @@ The last command prints `development cap: /absolute/path/to/cap`. Use that execu
 
 ## Install from a release
 
-The M1 preview has no published installation artifacts yet. When a release is available, download the package for your distribution and `SHA256SUMS` from [GitHub Releases](https://github.com/skynet-core/cap/releases). The first package targets are Debian 13 and Fedora 44 on Linux x86‑64. Run the checksum command in your download directory before installing or extracting:
+Download the package for your distribution and `SHA256SUMS` from [GitHub Releases](https://github.com/skynet-core/cap/releases). Develop prereleases include `CHANGELOG.md` with manual checks; use them for testing, not as stable releases. The first package targets are Debian 13 and Fedora 44 on Linux x86‑64. Verify the checksum before installing or extracting:
 
 ```sh
 sha256sum --check --ignore-missing SHA256SUMS
